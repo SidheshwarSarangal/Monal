@@ -182,14 +182,22 @@ jobs:
           echo "appinfo<<__EOF__" | tee /dev/stderr >> "$GITHUB_OUTPUT"
           echo "$json" | tee /dev/stderr >> "$GITHUB_OUTPUT"
           echo "__EOF__" | tee /dev/stderr >> "$GITHUB_OUTPUT"
-      - name: Publish ios to appstore connect
+      - name: Upload ios to appstore connect
         #run: xcrun altool --upload-app -f ./Monal/build/ipa/Monal.ipa --type ios --asc-provider S8D843U34Y --team-id S8D843U34Y -u "$(cat /Users/ci/apple_connect_upload_mail.txt)" -p "$(cat /Users/ci/apple_connect_upload_secret.txt)"
         env:
           #PILOT_LOCALIZED_BUILD_INFO: ${{ steps.buildinfo.outputs.buildinfo_ios }}
           PILOT_LOCALIZED_APP_INFO: ${{ steps.appinfo.outputs.appinfo }}
           PILOT_CHANGELOG: ${{ steps.releasenotes.outputs.notes_ios }}
         run: |
-          fastlane run upload_to_testflight api_key_path:"/Users/ci/appstoreconnect/key.json" team_id:"S8D843U34Y" ipa:"./Monal/build/ipa/Monal.ipa" distribute_external:true notify_external_testers:true groups:"Internal Pre-Beta Testers","Public Beta" reject_build_waiting_for_review:true submit_beta_review:true
+          fastlane run upload_to_testflight api_key_path:"/Users/ci/appstoreconnect/key.json" team_id:"S8D843U34Y" ipa:"./Monal/build/ipa/Monal.ipa" skip_submission:true
+      - name: Publish to ios betatesters
+        #run: xcrun altool --upload-app -f ./Monal/build/ipa/Monal.ipa --type ios --asc-provider S8D843U34Y --team-id S8D843U34Y -u "$(cat /Users/ci/apple_connect_upload_mail.txt)" -p "$(cat /Users/ci/apple_connect_upload_secret.txt)"
+        env:
+          #PILOT_LOCALIZED_BUILD_INFO: ${{ steps.buildinfo.outputs.buildinfo_ios }}
+          PILOT_LOCALIZED_APP_INFO: ${{ steps.appinfo.outputs.appinfo }}
+          PILOT_CHANGELOG: ${{ steps.releasenotes.outputs.notes_ios }}
+        run: |
+          fastlane run upload_to_testflight api_key_path:"/Users/ci/appstoreconnect/key.json" team_id:"S8D843U34Y" app_identifier:G7YU7X7KRJ.SworIM app_platform:ios build_number:${{ steps.releasenotes.outputs.buildNumber }} distribute_only:true distribute_external:true notify_external_testers:true groups:"Internal Pre-Beta Testers","Public Beta" reject_build_waiting_for_review:true submit_beta_review:true
       - name: Notarize catalyst
         run: xcrun notarytool submit ./Monal/build/app/Monal.zip --wait --team-id S8D843U34Y --key "/Users/ci/appstoreconnect/apiKey.p8" --key-id "$(cat /Users/ci/appstoreconnect/apiKeyId.txt)" --issuer "$(cat /Users/ci/appstoreconnect/apiIssuerId.txt)"
       - name: staple
@@ -214,14 +222,22 @@ jobs:
           UPLOAD_TYPE: beta
           buildNumber: ${{ steps.releasenotes.outputs.buildNumber }}
         run: ./scripts/uploadNonAlpha.sh
-      - name: Publish catalyst to appstore connect
+      - name: Upload catalyst to appstore connect
         #run:  xcrun altool --upload-app --file ./Monal/build/app/Monal.pkg --type macos --asc-provider S8D843U34Y -u "$(cat /Users/ci/apple_connect_upload_mail.txt)" -p "$(cat /Users/ci/apple_connect_upload_secret.txt)" --primary-bundle-id org.monal-im.prod.catalyst.monal
         env:
           #PILOT_LOCALIZED_BUILD_INFO: ${{ steps.buildinfo.outputs.buildinfo_macos }}
           PILOT_LOCALIZED_APP_INFO: ${{ steps.appinfo.outputs.appinfo }}
           PILOT_CHANGELOG: ${{ steps.releasenotes.outputs.notes_macos }}
         run: |
-          fastlane run upload_to_testflight api_key_path:"/Users/ci/appstoreconnect/key.json" team_id:"S8D843U34Y" pkg:"./Monal/build/app/Monal.pkg" distribute_external:true notify_external_testers:true groups:"Internal Pre-Beta Testers","Public Beta" reject_build_waiting_for_review:true submit_beta_review:true
+          fastlane run upload_to_testflight api_key_path:"/Users/ci/appstoreconnect/key.json" team_id:"S8D843U34Y" pkg:"./Monal/build/app/Monal.pkg" skip_submission:true
+      - name: Publish to catalyst betatesters
+        #run:  xcrun altool --upload-app --file ./Monal/build/app/Monal.pkg --type macos --asc-provider S8D843U34Y -u "$(cat /Users/ci/apple_connect_upload_mail.txt)" -p "$(cat /Users/ci/apple_connect_upload_secret.txt)" --primary-bundle-id org.monal-im.prod.catalyst.monal
+        env:
+          #PILOT_LOCALIZED_BUILD_INFO: ${{ steps.buildinfo.outputs.buildinfo_macos }}
+          PILOT_LOCALIZED_APP_INFO: ${{ steps.appinfo.outputs.appinfo }}
+          PILOT_CHANGELOG: ${{ steps.releasenotes.outputs.notes_macos }}
+        run: |
+          fastlane run upload_to_testflight api_key_path:"/Users/ci/appstoreconnect/key.json" team_id:"S8D843U34Y" app_identifier:org.monal-im.prod.catalyst.monal app_platform:ios build_number:${{ steps.releasenotes.outputs.buildNumber }} distribute_only:true distribute_external:true notify_external_testers:true groups:"Internal Pre-Beta Testers","Public Beta" reject_build_waiting_for_review:true submit_beta_review:true
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
