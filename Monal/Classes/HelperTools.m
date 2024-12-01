@@ -1880,11 +1880,14 @@ void swizzle(Class c, SEL orig, SEL new)
 
 +(void) signalSuspension
 {
-    DDLogVerbose(@"Suspending logger queue...");
-    [HelperTools flushLogsWithTimeout:0.100];
     @synchronized(_suspensionHandlingLock) {
-        dispatch_suspend([DDLog loggingQueue]);
-        _suspensionHandlingIsSuspended = YES;
+        if(!_suspensionHandlingIsSuspended)
+        {
+            DDLogVerbose(@"Suspending logger queue...");
+            [HelperTools flushLogsWithTimeout:0.100];
+            dispatch_suspend([DDLog loggingQueue]);
+            _suspensionHandlingIsSuspended = YES;
+        }
     }
     DDLogVerbose(@"Posting kMonalIsFreezed notification now...");
     [[NSNotificationCenter defaultCenter] postNotificationName:kMonalIsFreezed object:nil];
