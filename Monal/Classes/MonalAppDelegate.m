@@ -364,6 +364,9 @@ $$
 
 -(BOOL) application:(UIApplication*) application willFinishLaunchingWithOptions:(NSDictionary*) launchOptions
 {
+    //resume logging and other core tasks
+    [HelperTools signalResumption];
+    
     DDLogInfo(@"App launching with options: %@", launchOptions);
     
     //init IPC and ProcessLock
@@ -662,6 +665,9 @@ $$
     }
     else if([notification.name isEqualToString:@"NSWindowDidBecomeKeyNotification"])
     {
+        //resume logging and other core tasks
+        [HelperTools signalResumption];
+        
         DDLogInfo(@"Window got focus (key window)...");
         [MLProcessLock lock];
         @synchronized(self) {
@@ -1151,6 +1157,9 @@ $$
 
 -(void) applicationWillEnterForeground:(UIApplication*) application
 {
+    //resume logging and other core tasks
+    [HelperTools signalResumption];
+    
     DDLogInfo(@"Entering FG");
     [MLProcessLock lock];
     
@@ -1256,6 +1265,7 @@ $$
         [[MLXMPPManager sharedInstance] disconnectAll];
         DDLogInfo(@"|~~| T E R M I N A T E D |~~|");
         [DDLog flushLog];
+        [HelperTools flushLogsWithTimeout:0.025];
     }
 }
 
@@ -1464,11 +1474,7 @@ $$
                         [DDLog flushLog];
                     }
                     else
-                    {
-                        DDLogVerbose(@"Posting kMonalIsFreezed notification now...");
-                        [[NSNotificationCenter defaultCenter] postNotificationName:kMonalIsFreezed object:nil];
-                        [HelperTools flushLogsWithTimeout:0.100];
-                    }
+                        [HelperTools signalSuspension];
                 }];
             }
         }
@@ -1525,11 +1531,7 @@ $$
                     [[UIApplication sharedApplication] endBackgroundTask:task];
                     
                     if(stopped)
-                    {
-                        DDLogVerbose(@"Posting kMonalIsFreezed notification now...");
-                        [[NSNotificationCenter defaultCenter] postNotificationName:kMonalIsFreezed object:nil];
-                        [HelperTools flushLogsWithTimeout:0.100];
-                    }
+                        [HelperTools signalSuspension];
                 }
             }];
         }
@@ -1588,14 +1590,13 @@ $$
                 [task setTaskCompletedWithSuccess:!background];
                 
                 if(stopped)
-                {
-                    DDLogVerbose(@"Posting kMonalIsFreezed notification now...");
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMonalIsFreezed object:nil];
-                    [HelperTools flushLogsWithTimeout:0.100];
-                }
+                    [HelperTools signalSuspension];
             }
         }];
     };
+    
+    //resume logging and other core tasks
+    [HelperTools signalResumption];
     
     //only proceed with our BGTASK if the NotificationServiceExtension is not running
     [MLProcessLock lock];
@@ -1696,14 +1697,13 @@ $$
                 [task setTaskCompletedWithSuccess:!background];
                 
                 if(stopped)
-                {
-                    DDLogVerbose(@"Posting kMonalIsFreezed notification now...");
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMonalIsFreezed object:nil];
-                    [HelperTools flushLogsWithTimeout:0.100];
-                }
+                    [HelperTools signalSuspension];
             }
         }];
     };
+    
+    //resume logging and other core tasks
+    [HelperTools signalResumption];
     
     //only proceed with our BGTASK if the NotificationServiceExtension is not running
     [MLProcessLock lock];
@@ -1845,6 +1845,9 @@ $$
 
 -(void) incomingWakeupWithCompletionHandler:(void (^)(UIBackgroundFetchResult result)) completionHandler
 {
+    //resume logging and other core tasks
+    [HelperTools signalResumption];
+    
     if(![HelperTools isInBackground])
     {
         DDLogWarn(@"Ignoring incomingWakeupWithCompletionHandler: because app is in FG!");
@@ -1918,11 +1921,7 @@ $$
                         completionHandler(UIBackgroundFetchResultFailed);
                         
                         if(stopped)
-                        {
-                            DDLogVerbose(@"Posting kMonalIsFreezed notification now...");
-                            [[NSNotificationCenter defaultCenter] postNotificationName:kMonalIsFreezed object:nil];
-                            [HelperTools flushLogsWithTimeout:0.100];
-                        }
+                            [HelperTools signalSuspension];
                         
                         //trigger disconnect if we are idle and no timer is blocking us now
                         if(self->_bgTask != UIBackgroundTaskInvalid || self->_bgProcessing != nil || self->_bgRefreshing != nil)

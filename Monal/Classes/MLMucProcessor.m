@@ -528,10 +528,6 @@ $$instance_handler(handleRoomConfigFormInvalidation, account.mucProcessor, $$ID(
 $$
 
 $$instance_handler(handleRoomConfigForm, account.mucProcessor, $$ID(xmpp*, account), $$ID(XMPPIQ*, iqNode), $$ID(NSString*, roomJid), $$ID(NSDictionary*, mandatoryOptions), $$ID(NSDictionary*, optionalOptions), $$BOOL(deleteOnError), $$BOOL(joinOnSuccess))
-    MLAssert([iqNode.fromUser isEqualToString:roomJid], @"Room config form response jid not matching query jid!", (@{
-        @"iqNode.fromUser": [NSString stringWithFormat:@"%@", iqNode.fromUser],
-        @"roomJid": [NSString stringWithFormat:@"%@", roomJid],
-    }));
     if([iqNode check:@"/<type=error>"])
     {
         DDLogError(@"Failed to fetch room config form for '%@': %@", roomJid, [iqNode findFirst:@"error"]);
@@ -619,10 +615,6 @@ $$instance_handler(handleRoomConfigResult, account.mucProcessor, $$ID(xmpp*, acc
         [self handleError:[NSString stringWithFormat:NSLocalizedString(@"Could not configure group '%@'", @""), roomJid] forMuc:roomJid withNode:iqNode andIsSevere:YES];
         return;
     }
-    MLAssert([iqNode.fromUser isEqualToString:roomJid], @"Room config form response jid not matching query jid!", (@{
-        @"iqNode.fromUser": [NSString stringWithFormat:@"%@", iqNode.fromUser],
-        @"roomJid": [NSString stringWithFormat:@"%@", roomJid],
-    }));
     
     //don't call success handler if we are only "half-joined" (see comments below for what that means)
     if(joinOnSuccess)
@@ -1327,11 +1319,6 @@ $$instance_handler(handleDiscoResponseInvalidation, account.mucProcessor, $$ID(x
 $$
 
 $$instance_handler(handleDiscoResponse, account.mucProcessor, $$ID(xmpp*, account), $$ID(XMPPIQ*, iqNode), $$ID(NSString*, roomJid), $$BOOL(join), $$BOOL(updateBookmarks))
-    MLAssert([iqNode.fromUser isEqualToString:roomJid], @"Disco response jid not matching query jid!", (@{
-        @"iqNode.fromUser": [NSString stringWithFormat:@"%@", iqNode.fromUser],
-        @"roomJid": [NSString stringWithFormat:@"%@", roomJid],
-    }));
-    
     //no matter what the disco response is: we are not creating this muc anymore
     //either because we successfully created it and called join afterwards,
     //or because the user tried to simultaneously create and join this muc (the join has precendence in this case)
